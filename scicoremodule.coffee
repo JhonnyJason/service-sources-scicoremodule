@@ -53,7 +53,12 @@ terminateServer = ->
         console.log("Gracefully Terminated. Bye!")
         process.exit(0)
         return
-    
+    onStubborn = ->
+        console.log("Something is taking too long. It is getting killed now ;-) Bye!")
+        process.exit(0)
+        return
+        
+    setTimeout(onStubborn, 2000)
     serverObj.close(onClosed)
     return
 
@@ -89,6 +94,8 @@ handleSocketActivation = (backlog) ->
     listeningMode = "SystemD FD 3"
     ## always use fd 3 for  Socket Activation - ignore the rest here
     handle = {fd: 3}
+
+    # return log "skip actualy listening on FD 3.."
     serverObj = serverObj.listen(handle, backlog, cb)
     return listening
 
@@ -102,11 +109,11 @@ portUnixListen = (p) ->
     if typeof p.listenOn == "string" 
         options.path = p.listenOn
         listeningMode = "unix: #{options.path}"
-
-    else 
+    else
         options.port = p.listenOn
         listeningMode = "tcp: #{options.port}"
 
+    # return log "skip actually listening on "+listeningMode
     serverObj = serverObj.listen(options, cb)
     return listening
 
@@ -272,7 +279,7 @@ compileRoutes = (sciRegistry) ->
     # log keys
     routes = []
     try routes.push(...compile(k, sciRegistry[k])) for k in keys
-    catch err then console.error(err.message)
+    catch err then throw new Error("Error on Compiling Routes: "+err.message)
     return routes
 
 compile = (route, sciObj) ->
@@ -413,6 +420,11 @@ respondWithResult = (response, jsonString) ->
 handlerCreators = Object.create(null)
 
 ############################################################
+checkForValidErrorObject = (obj) ->
+    if typeof obj == "object" and obj.error? then return
+    return "No Error Object!"
+
+############################################################
 #region All Implementation
 # allImplementations = (route, func, conf) ->
 #     ## authOption is provided
@@ -421,12 +433,12 @@ handlerCreators = Object.create(null)
 #         throw new Error("authOption not a function @#{route}!")
 
 #     ## argsSchema is provided
-#     validateArgs = createValidator(conf.argsSchema)
+#     validateArgs = createValidator(conf.argsSchema, true)
 #     if typeof validateArgs != "function"
 #         throw new Error("validateArgs is not a function @#{route}!")
 
 #     ## resultSchema is provided
-#     validateResult = createValidator(conf.resultSchema)
+#     validateResult = createValidator(conf.resultSchema, true)
 #     if typeof validateResult != "function"
 #         throw new Error("validateResult is not a function @#{route}!")
 
@@ -701,7 +713,7 @@ handlerCreators["1000"] = (route, func, conf) -> #1 aO
 ############################################################
 handlerCreators["0100"] = (route, func, conf) -> #2 aS
     ## argsSchema is provided
-    validateArgs = createValidator(conf.argsSchema)
+    validateArgs = createValidator(conf.argsSchema, true)
     if typeof validateArgs != "function"
         throw new Error("validateArgs is not a function @#{route}!")
     
@@ -751,7 +763,7 @@ handlerCreators["1100"] = (route, func, conf) -> #3 aO + aS
         throw new Error("authOption not a function @#{route}!")
     
     ## argsSchema is provided
-    validateArgs = createValidator(conf.argsSchema)
+    validateArgs = createValidator(conf.argsSchema, true)
     if typeof validateArgs != "function"
         throw new Error("validateArgs is not a function @#{route}!")
 
@@ -803,7 +815,7 @@ handlerCreators["1100"] = (route, func, conf) -> #3 aO + aS
 handlerCreators["0010"] = (route, func, conf) -> #4 rS
 
     ## resultSchema is provided
-    validateResult = createValidator(conf.resultSchema)
+    validateResult = createValidator(conf.resultSchema, true)
     if typeof validateResult != "function"
         throw new Error("validateResult is not a function @#{route}!")
 
@@ -859,7 +871,7 @@ handlerCreators["1010"] = (route, func, conf) -> #5 a0 + rS
         throw new Error("authOption not a function @#{route}!")
 
     ## resultSchema is provided
-    validateResult = createValidator(conf.resultSchema)
+    validateResult = createValidator(conf.resultSchema, true)
     if typeof validateResult != "function"
         throw new Error("validateResult is not a function @#{route}!")
 
@@ -909,12 +921,12 @@ handlerCreators["1010"] = (route, func, conf) -> #5 a0 + rS
 ############################################################
 handlerCreators["0110"] = (route, func, conf) -> #6 aS + rS
     ## argsSchema is provided
-    validateArgs = createValidator(conf.argsSchema)
+    validateArgs = createValidator(conf.argsSchema, true)
     if typeof validateArgs != "function"
         throw new Error("validateArgs is not a function @#{route}!")
 
     ## resultSchema is provided
-    validateResult = createValidator(conf.resultSchema)
+    validateResult = createValidator(conf.resultSchema, true)
     if typeof validateResult != "function"
         throw new Error("validateResult is not a function @#{route}!")
 
@@ -968,12 +980,12 @@ handlerCreators["1110"] = (route, func, conf) -> #7 aO + aS + rS
         throw new Error("authOption not a function @#{route}!")
 
     ## argsSchema is provided
-    validateArgs = createValidator(conf.argsSchema)
+    validateArgs = createValidator(conf.argsSchema, true)
     if typeof validateArgs != "function"
         throw new Error("validateArgs is not a function @#{route}!")
 
     ## resultSchema is provided
-    validateResult = createValidator(conf.resultSchema)
+    validateResult = createValidator(conf.resultSchema, true)
     if typeof validateResult != "function"
         throw new Error("validateResult is not a function @#{route}!")
 
@@ -1140,7 +1152,7 @@ handlerCreators["1001"] = (route, func, conf) -> #9 aO + rA
 ############################################################
 handlerCreators["0101"] = (route, func, conf) -> #10 aS + rA
     ## argsSchema is provided
-    validateArgs = createValidator(conf.argsSchema)
+    validateArgs = createValidator(conf.argsSchema, true)
     if typeof validateArgs != "function"
         throw new Error("validateArgs is not a function @#{route}!")
 
@@ -1201,7 +1213,7 @@ handlerCreators["1101"] = (route, func, conf) -> #11 aO + aS + rA
         throw new Error("authOption not a function @#{route}!")
 
     ## argsSchema is provided
-    validateArgs = createValidator(conf.argsSchema)
+    validateArgs = createValidator(conf.argsSchema, true)
     if typeof validateArgs != "function"
         throw new Error("validateArgs is not a function @#{route}!")
 
@@ -1262,7 +1274,7 @@ handlerCreators["1101"] = (route, func, conf) -> #11 aO + aS + rA
 ############################################################
 handlerCreators["0011"] = (route, func, conf) -> #12 rS + rA
     ## resultSchema is provided
-    validateResult = createValidator(conf.resultSchema)
+    validateResult = createValidator(conf.resultSchema, true)
     if typeof validateResult != "function"
         throw new Error("validateResult is not a function @#{route}!")
 
@@ -1331,7 +1343,7 @@ handlerCreators["1011"] = (route, func, conf) -> #13 aO + rS + rA
         throw new Error("authOption not a function @#{route}!")
 
     ## resultSchema is provided
-    validateResult = createValidator(conf.resultSchema)
+    validateResult = createValidator(conf.resultSchema, true)
     if typeof validateResult != "function"
         throw new Error("validateResult is not a function @#{route}!")
 
@@ -1393,12 +1405,12 @@ handlerCreators["1011"] = (route, func, conf) -> #13 aO + rS + rA
 ############################################################
 handlerCreators["0111"] = (route, func, conf) -> #14 aS + rS + rA
     ## argsSchema is provided
-    validateArgs = createValidator(conf.argsSchema)
+    validateArgs = createValidator(conf.argsSchema, true)
     if typeof validateArgs != "function"
         throw new Error("validateArgs is not a function @#{route}!")
 
     ## resultSchema is provided
-    validateResult = createValidator(conf.resultSchema)
+    validateResult = createValidator(conf.resultSchema, true)
     if typeof validateResult != "function"
         throw new Error("validateResult is not a function @#{route}!")
 
@@ -1462,12 +1474,12 @@ handlerCreators["1111"] = (route, func, conf) -> #15 aO + aS + rS + rA
         throw new Error("authOption not a function @#{route}!")
 
     ## argsSchema is provided
-    validateArgs = createValidator(conf.argsSchema)
+    validateArgs = createValidator(conf.argsSchema, true)
     if typeof validateArgs != "function"
         throw new Error("validateArgs is not a function @#{route}!")
 
     ## resultSchema is provided
-    validateResult = createValidator(conf.resultSchema)
+    validateResult = createValidator(conf.resultSchema, true)
     if typeof validateResult != "function"
         throw new Error("validateResult is not a function @#{route}!")
 
@@ -1586,7 +1598,7 @@ export sciStartServer = (o) ->
     serverObj.on("request", mainRequestHandler)
     serverObj.on("upgrade", conectionUpgradeHandler)
     serverObj.on("clientError", clientErrorHandler)
-
+    
     ## default backlog is undefined
     if typeof o.backlog == "number" then backlog = o.backlog
     ## default listenOn is 3333

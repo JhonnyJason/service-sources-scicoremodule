@@ -142,7 +142,7 @@ clientErrorHandler = (err, socket) ->
 mainRequestHandler = (req, res) ->
     # log "mainRequestHandler_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-\n"
 
-    # log "req.url: #{req.url}"
+    log "req.url: #{req.url}"
     # log "req.method: #{req.method}"
     # log "req.headers[Content-Type]: #{req.headers['content-type']}"
     # log "req.headers[Content-Length]: #{req.headers['content-length']}" 
@@ -159,7 +159,7 @@ mainRequestHandler = (req, res) ->
     prefix = req.method[0]
     key = "#{prefix}#{route}"
 
-    # olog {route, key2}
+    # olog {route, key}
     info = routeInfoMap[key]
     if !info? then return respondWith404(res)
 

@@ -140,15 +140,15 @@ clientErrorHandler = (err, socket) ->
 ############################################################
 #region Request Processing
 mainRequestHandler = (req, res) ->
-    log "mainRequestHandler_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-\n"
+    # log "mainRequestHandler_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-\n"
 
-    log "req.url: #{req.url}"
-    log "req.method: #{req.method}"
-    log "req.headers[Content-Type]: #{req.headers['content-type']}"
-    log "req.headers[Content-Length]: #{req.headers['content-length']}" 
-    log "req.headers[Transfer-Encoding]: #{req.headers['transfer-encoding']}"
+    # log "req.url: #{req.url}"
+    # log "req.method: #{req.method}"
+    # log "req.headers[Content-Type]: #{req.headers['content-type']}"
+    # log "req.headers[Content-Length]: #{req.headers['content-length']}" 
+    # log "req.headers[Transfer-Encoding]: #{req.headers['transfer-encoding']}"
 
-    olog req.headers
+    # olog req.headers
 
     res.on("error", (error) -> console.error(error.message))
     req.on("error", (error) -> console.error(error.message))
@@ -170,7 +170,7 @@ mainRequestHandler = (req, res) ->
 
     hasBody = (cLength > 0)
 
-    olog { cLength, cType, isJson, hasBody }
+    # olog { cLength, cType, isJson, hasBody }
 
     if isJson and !hasBody then return respondWith400(res)
     if hasBody and bodySizeLimit == 0 then return respondWith400(res)
@@ -195,10 +195,10 @@ mainRequestHandler = (req, res) ->
     bodyLength = 0
 
     dataRead = (d) ->
-        log "dataRead"
+        # log "dataRead"
         bodyLength += d.length
         if bodyLength > bodySizeLimit or bodyLength > cLength
-            olog { bodyLength, bodySizeLimit, cLength }
+            # olog { bodyLength, bodySizeLimit, cLength }
             respondWith413(res)
             return req.destroy() # prevent further data read
         bodyChunks.push(d)
@@ -206,9 +206,9 @@ mainRequestHandler = (req, res) ->
     req.on('data', dataRead)
     
     handleBodyAndProcessRequest = ->
-        log 'dataStreamEnd'
+        # log 'dataStreamEnd'
         if bodyLength != cLength
-            olog { bodyLength,cLength }
+            # olog { bodyLength,cLength }
             respondWith413(res)
             return req.destroy() # prevent further data read
 
@@ -284,7 +284,7 @@ compileRoutes = (sciRegistry) ->
 
 compile = (route, sciObj) ->
     log "compile #{route}"
-    olog sciObj    
+    # olog sciObj    
     if route[0] == "/" then route = route.slice(1)
 
     f = sciObj.func
@@ -328,7 +328,7 @@ compile = (route, sciObj) ->
     log "handlerType: #{handlerCreatorKey}"
     handlerFunction = handlerCreators[handlerCreatorKey](route, f, c)
 
-    olog { postRoute, getRoute }
+    # olog { postRoute, getRoute }
     # olog c
 
     routeInfo = {
